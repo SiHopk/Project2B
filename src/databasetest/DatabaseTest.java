@@ -1,22 +1,21 @@
 package databasetest;
 
 import java.sql.*;
+import org.json.simple.*;
+import java.util.*;
 
 public class DatabaseTest {
 
     public static void main(String[] args) {
-        
+        getJSONData();
+    }
+    
+    public static JSONArray getJSONData(){
         Connection conn = null;
         PreparedStatement pstSelect = null, pstUpdate = null;
         ResultSet resultset = null;
-        ResultSetMetaData metadata = null;
-        
-        String query, key, value;
-        String newFirstName = "Alfred", newLastName = "Neuman";
-        
-        boolean hasresults;
-        int resultCount, columnCount, updateCount = 0;
-        
+        JSONArray data = new JSONArray();
+
         try {
             
             /* Identify the Server */
@@ -25,137 +24,38 @@ public class DatabaseTest {
             String username = "root";
             String password = "CS488";
             System.out.println("Connecting to " + server + "...");
-            
-            /* Load the MySQL JDBC Driver */
-            
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            
-            /* Open Connection */
 
             conn = DriverManager.getConnection(server, username, password);
-
-            /* Test Connection */
             
-            if (conn.isValid(0)) {
+            if (conn.isValid(0)) 
+            {
                 
                 /* Connection Open! */
                 
-                System.out.println("Connected Successfully!");
+                System.out.println("Connected Successfully!"); 
                 
-                // Prepare Update Query
+                Statement stat = conn.createStatement();
+                String query = "SELECT * FROM p2_test.people";
+                ResultSet result = stat.executeQuery(query);
                 
-                query = "INSERT INTO people (firstname, lastname) VALUES (?, ?)";
-                pstUpdate = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-                pstUpdate.setString(1, newFirstName);
-                pstUpdate.setString(2, newLastName);
-                
-                // Execute Update Query
-                
-                updateCount = pstUpdate.executeUpdate();
-                
-                // Get New Key; Print To Console
-                
-                if (updateCount > 0) {
-            
-                    resultset = pstUpdate.getGeneratedKeys();
-
-                    if (resultset.next()) {
-
-                        System.out.print("Update Successful!  New Key: ");
-                        System.out.println(resultset.getInt(1));
-
-                    }
-
+                while(result.next())
+                {
+                    Map x = new LinkedHashMap();
+                    x.put("firstname", result.getString("firstname"));
+                    x.put("middleinitial", result.getString("middleinitial"));
+                    x.put("laststname", result.getString("lastname"));
+                    x.put("address", result.getString("address"));
+                    x.put("city", result.getString("city"));
+                    x.put("state", result.getString("state"));
+                    x.put("zip", result.getString("zip"));
+                    data.add(x);
                 }
-                
-                
-                /* Prepare Select Query */
-                
-                query = "SELECT * FROM people";
-                pstSelect = conn.prepareStatement(query);
-                
-                /* Execute Select Query */
-                
-                System.out.println("Submitting Query ...");
-                
-                hasresults = pstSelect.execute();                
-                
-                /* Get Results */
-                
-                System.out.println("Getting Results ...");
-                
-                while ( hasresults || pstSelect.getUpdateCount() != -1 ) {
-
-                    if ( hasresults ) {
-                        
-                        /* Get ResultSet Metadata */
-                        
-                        resultset = pstSelect.getResultSet();
-                        metadata = resultset.getMetaData();
-                        columnCount = metadata.getColumnCount();
-                        
-                        /* Get Column Names; Print as Table Header */
-                        
-                        for (int i = 1; i <= columnCount; i++) {
-
-                            key = metadata.getColumnLabel(i);
-
-                            System.out.format("%20s", key);
-
-                        }
-                        
-                        /* Get Data; Print as Table Rows */
-                        
-                        while(resultset.next()) {
-                            
-                            /* Begin Next ResultSet Row */
-
-                            System.out.println();
-                            
-                            /* Loop Through ResultSet Columns; Print Values */
-
-                            for (int i = 1; i <= columnCount; i++) {
-
-                                value = resultset.getString(i);
-
-                                if (resultset.wasNull()) {
-                                    System.out.format("%20s", "NULL");
-                                }
-
-                                else {
-                                    System.out.format("%20s", value);
-                                }
-
-                            }
-
-                        }
-                        
-                    }
-
-                    else {
-
-                        resultCount = pstSelect.getUpdateCount();  
-
-                        if ( resultCount == -1 ) {
-                            break;
-                        }
-
-                    }
-                    
-                    /* Check for More Data */
-
-                    hasresults = pstSelect.getMoreResults();
-
-                }
-                
-            }
-            
-            System.out.println();
-            
-            /* Close Database Connection */
-            
-            conn.close();
-            
+                System.out.println("[ {\"firstname\": \"Judith\", \"middleinitial\": \"K\", \"lastname\": \"Rogers\", \"address\": \"313 Steele Street\", \"city\": \"Lombard\", \"state\": \"IL\", \"zip\": \"60148\"}, {\"firstname\": \"Jerry\", \"middleinitial\": \"J\", \"lastname\": \"Caldwell\", \"address\": \"4602 Roosevelt Street\", \"city\": \"San Francisco\", \"state\": \"CA\", \"zip\": \"94112\"}, {\"firstname\": \"Lavina\", \"middleinitial\": \"R\", \"lastname\": \"Jones\", \"address\": \"2792 Stanley Avenue\", \"city\": \"Great Neck\", \"state\": \"NY\", \"zip\": \"11021\"}, {\"firstname\": \"David\", \"middleinitial\": \"C\", \"lastname\": \"Snyder\", \"address\": \"2704 Lost Creek Road\", \"city\": \"Birdsboro\", \"state\": \"PA\", \"zip\": \"19508\"}, {\"firstname\": \"Carmen\", \"middleinitial\": \"G\", \"lastname\": \"Stewart\", \"address\": \"3788 Overlook Drive\", \"city\": \"Indianapolis\", \"state\": \"IN\", \"zip\": \"46202\"}, {\"firstname\": \"Tiffany\", \"middleinitial\": \"P\", \"lastname\": \"Strawn\", \"address\": \"3602 Clement Street\", \"city\": \"Atlanta\", \"state\": \"GA\", \"zip\": \"30303\"}, {\"firstname\": \"Stevie\", \"middleinitial\": \"D\", \"lastname\": \"Snow\", \"address\": \"1869 Clair Street\", \"city\": \"Waco\", \"state\": \"TX\", \"zip\": \"76710\"}, {\"firstname\": \"Pauline\", \"middleinitial\": \"B\", \"lastname\": \"Ward\", \"address\": \"102 Godfrey Road\", \"city\": \"New York\", \"state\": \"NY\", \"zip\": \"10038\"}, {\"firstname\": \"Thomas\", \"middleinitial\": \"J\", \"lastname\": \"Beckwith\", \"address\": \"2629 Willis Avenue\", \"city\": \"Jacksonville\", \"state\": \"FL\", \"zip\": \"32216\"}, {\"firstname\": \"Courtney\", \"middleinitial\": \"B\", \"lastname\": \"Eckhoff\", \"address\": \"3540 Leverton Cove Road\", \"city\": \"Warren\", \"state\": \"MA\", \"zip\": \"01083\"}, {\"firstname\": \"Timothy\", \"middleinitial\": \"S\", \"lastname\": \"Freeman\", \"address\": \"1538 Cardinal Lane\", \"city\": \"Westville\", \"state\": \"IL\", \"zip\": \"61883\"}, {\"firstname\": \"Kathy\", \"middleinitial\": \"F\", \"lastname\": \"Cox\", \"address\": \"4245 Hazelwood Avenue\", \"city\": \"West Des Moines\", \"state\": \"IA\", \"zip\": \"50266\"}, {\"firstname\": \"Barbara\", \"middleinitial\": \"A\", \"lastname\": \"Freda\", \"address\": \"1383 Hamilton Drive\", \"city\": \"Beaumont\", \"state\": \"TX\", \"zip\": \"77701\"}, {\"firstname\": \"Cindy\", \"middleinitial\": \"N\", \"lastname\": \"Leavitt\", \"address\": \"3201 Chipmunk Lane\", \"city\": \"Portland\", \"state\": \"ME\", \"zip\": \"04101\"}, {\"firstname\": \"Robert\", \"middleinitial\": \"R\", \"lastname\": \"Holder\", \"address\": \"3760 Walton Street\", \"city\": \"Salt Lake City\", \"state\": \"UT\", \"zip\": \"84111\"}, {\"firstname\": \"Ali\", \"middleinitial\": \"S\", \"lastname\": \"Peters\", \"address\": \"3946 Victoria Street\", \"city\": \"Albany\", \"state\": \"LA\", \"zip\": \"70711\"}, {\"firstname\": \"Stephanie\", \"middleinitial\": \"T\", \"lastname\": \"Johnson\", \"address\": \"2025 Poplar Street\", \"city\": \"Schaumburg\", \"state\": \"IL\", \"zip\": \"60173\"}, {\"firstname\": \"Betty\", \"middleinitial\": \"R\", \"lastname\": \"Hoffmann\", \"address\": \"4060 Hinkle Deegan Lake Road\", \"city\": \"Binghamton\", \"state\": \"NY\", \"zip\": \"13901\"}, {\"firstname\": \"Robert\", \"middleinitial\": \"G\", \"lastname\": \"Waddell\", \"address\": \"2500 Pinchelone Street\", \"city\": \"Virginia Beach\", \"state\": \"VA\", \"zip\": \"23464\"}, {\"firstname\": \"Shannon\", \"middleinitial\": \"A\", \"lastname\": \"Hartmann\", \"address\": \"4709 Boundary Street\", \"city\": \"St Augustine\", \"state\": \"FL\", \"zip\": \"32092\"} ]");
+                System.out.println(data.toString());
+            }          
+            /* Close Database Connection */            
+            conn.close();           
         }
         
         catch (Exception e) {
@@ -173,7 +73,7 @@ public class DatabaseTest {
             if (pstUpdate != null) { try { pstUpdate.close(); pstUpdate = null; } catch (Exception e) {} }
             
         }
-        
-    }
-    
+        return null;
+    }  
 }
+
