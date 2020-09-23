@@ -2,9 +2,6 @@ package databasetest;
 
 import java.sql.*;
 import org.json.simple.*;
-import java.util.*;
-import org.json.simple.parser.*;
-
 
 public class DatabaseTest {
 
