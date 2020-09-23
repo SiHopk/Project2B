@@ -3,6 +3,8 @@ package databasetest;
 import java.sql.*;
 import org.json.simple.*;
 import java.util.*;
+import org.json.simple.parser.*;
+
 
 public class DatabaseTest {
 
@@ -15,7 +17,6 @@ public class DatabaseTest {
         PreparedStatement pstSelect = null, pstUpdate = null;
         ResultSet resultset = null;
         JSONArray data = new JSONArray();
-        JSONObject x = new JSONObject();
 
         try 
         {
@@ -33,19 +34,18 @@ public class DatabaseTest {
             if (conn.isValid(0)) 
             {
                 
-                /* Connection Open! */
-                
                 System.out.println("Connected Successfully!"); 
                 
-                Statement stat = conn.createStatement();
+                Statement statement = conn.createStatement();
                 String query = "SELECT * FROM p2_test.people";
-                ResultSet result = stat.executeQuery(query);
+                ResultSet result = statement.executeQuery(query);
                 
                 while(result.next())
                 {
+                    JSONObject x = new JSONObject();
                     x.put("firstname", result.getString("firstname"));
                     x.put("middleinitial", result.getString("middleinitial"));
-                    x.put("laststname", result.getString("lastname"));
+                    x.put("lastname", result.getString("lastname"));
                     x.put("address", result.getString("address"));
                     x.put("city", result.getString("city"));
                     x.put("state", result.getString("state"));
@@ -75,6 +75,6 @@ public class DatabaseTest {
             
         }
         return data;
-    }  
+    }
 }
 
